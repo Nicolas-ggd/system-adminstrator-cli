@@ -1,21 +1,19 @@
-name: Go
-
+name: GO
 
 on:
   push:
-    tags:
-      - 'v*'
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build:
     strategy:
       matrix:
-        go-version: [1.21.x, 1.22.x]
+        go-version: [1.20.x, 1.21.x, 1.22.x]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +27,7 @@ jobs:
         run: go test ./...
 
   goreleaser:
-    if: startsWith(github.ref, 'ref/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,5 +44,5 @@ jobs:
           version: v1.9.2
           args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           CGO_ENABLED: 0
