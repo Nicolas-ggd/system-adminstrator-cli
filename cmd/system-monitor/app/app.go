@@ -13,10 +13,14 @@ var (
 )
 
 func Run() {
-	processing.Println("➜ system-monitor starting...")
-
 	arg := os.Args[1:]
-	if arg[0] != "run" {
+
+	if arg[0] == "-info" {
+		monitor.CpuLogger()
+	}
+
+	processing.Println("➜ system-monitor starting...")
+	if arg[0] != "run" && arg[0] != "-info" {
 		help()
 		os.Exit(0)
 	}
@@ -25,7 +29,6 @@ func Run() {
 
 	switch systemOs {
 	case "linux":
-		monitor.CpuLogger()
 		for {
 			idle0, total0 := monitor.GetLinuxCPU()
 			time.Sleep(3 * time.Second)
@@ -38,7 +41,6 @@ func Run() {
 			processing.Printf("➜  CPU usage is %f%% [busy: %f, total: %f]\n", cpuUsage, totalTicks-idleTicks, totalTicks)
 		}
 	case "darwin":
-		monitor.CpuLogger()
 	default:
 		os.Exit(0)
 	}
