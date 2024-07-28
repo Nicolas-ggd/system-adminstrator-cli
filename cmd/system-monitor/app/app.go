@@ -1,9 +1,11 @@
 package app
 
 import (
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/fatih/color"
 	"os"
 	"runtime"
+	"time"
 )
 
 var (
@@ -13,11 +15,31 @@ var (
 func Run() {
 	processing.Println("➜ system-monitor starting...")
 
-	_ = detectOS()
-
 	arg := os.Args[1:]
 	if arg[0] != "run" {
 		help()
+		os.Exit(0)
+	}
+
+	systemOs := detectOS()
+
+	switch systemOs {
+	case "linux":
+		monitor.CpuLogger()
+		for {
+			idle0, total0 := monitor.GetLinuxCPU()
+			time.Sleep(3 * time.Second)
+			idle1, total1 := monitor.GetLinuxCPU()
+
+			idleTicks := float64(idle1 - idle0)
+			totalTicks := float64(total1 - total0)
+			cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
+
+			processing.Printf("➜  CPU usage is %f%% [busy: %f, total: %f]\n", cpuUsage, totalTicks-idleTicks, totalTicks)
+		}
+	case "darwin":
+		monitor.CpuLogger()
+	default:
 		os.Exit(0)
 	}
 
