@@ -77,15 +77,9 @@ func detectOS() string {
 	osSystem := runtime.GOOS
 
 	switch osSystem {
-	case "windows":
-		processing.Println("➜ OS: Windows System")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
-	case "darwin":
-		processing.Println("➜ OS: Darwin")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
 	case "linux":
 		processing.Println("➜ OS: Linux")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
+		processing.Printf("➜ Architecture: %s\n", osSystem)
 	default:
 		processing.Printf("%s.\n", osSystem)
 	}
