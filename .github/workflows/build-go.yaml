@@ -21,9 +21,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: Build
-        run: go build -o system-monitor
+        run: go build -o system-monitor ./cmd/system-monitor
       - name: Run Tests
-        run: go test ./...
+        run: go test ./cmd/system-monitor
 
   goreleaser:
     if: startsWith(github.ref, 'refs/tags/')
