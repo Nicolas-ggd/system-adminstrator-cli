@@ -34,10 +34,11 @@ func Run() {
 			}
 
 			for {
-				time.Sleep(time.Second)
+				time.Sleep(1 * time.Second)
 				endStats, err := monitor.ReadCPUTasks(cpuCount)
 				if err != nil {
 					invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
 				}
 
 				// clear screen
@@ -55,6 +56,9 @@ func Run() {
 
 				// render table
 				table.Render()
+
+				// update startStats to endStats for the next interval calc
+				startStats = endStats
 			}
 		default:
 			os.Exit(0)
@@ -92,7 +96,7 @@ func detectOS() string {
 
 	switch osSystem {
 	case "linux":
-		processing.Println("➜ OS: Linux")
+		processing.Printf("➜ OS: %s\n", osSystem)
 		processing.Printf("➜ Architecture: %s\n", osSystem)
 	default:
 		processing.Printf("%s.\n", osSystem)

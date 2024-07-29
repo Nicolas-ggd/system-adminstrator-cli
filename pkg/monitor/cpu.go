@@ -8,21 +8,11 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
-	"time"
 )
 
 var (
 	processing = color.New(color.Bold, color.FgGreen)
 )
-
-type CpuMonitor struct {
-	CPUCount       int
-	PerCPULoad     bool
-	formatString   string
-	updateInterval time.Duration
-	mutex          sync.Mutex
-}
 
 // CPUStats hold the CPU times from /proc/stat
 type CPUStats struct {
@@ -41,6 +31,7 @@ type CPUStats struct {
 // ReadCPUTasks function calculate CPU average usage percentage without idle
 func ReadCPUTasks(cpuCount int) ([]CPUStats, error) {
 	var stats []CPUStats
+	var cpuStat CPUStats
 
 	val, err := os.ReadFile(kernelDir)
 	if err != nil {
@@ -56,7 +47,7 @@ func ReadCPUTasks(cpuCount int) ([]CPUStats, error) {
 					return nil, fmt.Errorf("unexpected format in /proc/stat")
 				}
 
-				cpuStat := CPUStats{
+				cpuStat = CPUStats{
 					User:      parse.ToUint64(fields[1]),
 					Nice:      parse.ToUint64(fields[2]),
 					System:    parse.ToUint64(fields[3]),
@@ -89,16 +80,16 @@ func CalculateCPUUsage(start, end []CPUStats) ([]float64, error) {
 	usage := make([]float64, len(start))
 
 	for i := range start {
-		startTotal := start[i].User + start[i].Nice + start[i].System + start[i].Idle + start[i].Iowait + start[i].Irq + start[i].Softirq + start[i].Steal + start[i].Guest + start[i].GuestNice
-		endTotal := end[i].User + end[i].Nice + end[i].System + end[i].Idle + end[i].Iowait + end[i].Irq + end[i].Softirq + end[i].Steal + end[i].Guest + end[i].GuestNice
+		startTotal := start[i].User + start[i].Nice + start[i].System + start[i].Idle + start[i].Iowait + start[i].Irq + start[i].Softirq + start[i].Steal
+		endTotal := end[i].User + end[i].Nice + end[i].System + end[i].Idle + end[i].Iowait + end[i].Irq + end[i].Softirq + end[i].Steal
 
 		totalDelta := endTotal - startTotal
-		idleDelta := end[i].Idle - start[i].Idle
+		idleDelta := (end[i].Idle + end[i].Iowait) - (start[i].Idle + start[i].Iowait)
 
 		if totalDelta == 0 {
 			usage[i] = 0.0
 		} else {
-			usage[i] = (float64(totalDelta) - float64(idleDelta)) / float64(totalDelta) * 100.0
+			usage[i] = 100 * float64(totalDelta-idleDelta) / float64(totalDelta)
 		}
 	}
 
