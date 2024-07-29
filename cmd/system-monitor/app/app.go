@@ -1,11 +1,10 @@
 package app
 
 import (
-	"fmt"
-	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/linegraph"
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/cli"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/fatih/color"
-	"github.com/shirou/gopsutil/mem"
+	"log"
 	"os"
 	"runtime"
 	"time"
@@ -26,7 +25,8 @@ func Run() {
 	case "run":
 		switch systemOs {
 		case "linux":
-			startStats, err := monitor.ReadCPUTasks()
+			cpuCount := monitor.CountCPUCore()
+			startStats, err := monitor.ReadCPUTasks(cpuCount)
 			if err != nil {
 				invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
 				invalid.Printf("Invalid OS system, your current OS is: %s\n", systemOs)
@@ -34,21 +34,24 @@ func Run() {
 			}
 
 			for {
-				time.Sleep(2 * time.Second)
-				endStats, err := monitor.ReadCPUTasks()
+				time.Sleep(time.Second)
+				endStats, err := monitor.ReadCPUTasks(cpuCount)
 				if err != nil {
 					invalid.Printf("Error reading CPU stats: %s\n", err.Error())
 				}
-				v, _ := mem.VirtualMemory()
-				fmt.Println(v.Free)
-
-				cpuUsage := monitor.CalculateCPUUsage(startStats, endStats)
 
 				// clear screen
-				linegraph.ClearScreen()
+				cli.ClearScreen()
+
+				cpuUsage, err := monitor.CalculateCPUUsage(startStats, endStats)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				processing.Printf("system-monitoring - %v", time.Now().Format("15:04:05"))
 
 				// draw table
-				table := linegraph.DrawTable(cpuUsage, v.UsedPercent)
+				table := cli.DrawTable(cpuUsage)
 
 				// render table
 				table.Render()

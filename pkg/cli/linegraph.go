@@ -1,4 +1,4 @@
-package linegraph
+package cli
 
 import (
 	"fmt"
@@ -7,12 +7,7 @@ import (
 	"os/exec"
 )
 
-// table header
-var (
-	tableHeaders = []string{"%CPU", "%MEM"}
-)
-
-// clear screen
+// ClearScreen clear previous screen
 func ClearScreen() {
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
@@ -20,10 +15,9 @@ func ClearScreen() {
 }
 
 // DrawTable draw table using external library
-func DrawTable(cpuUsage, memUsage float64) *tablewriter.Table {
+func DrawTable(cpuUsage []float64) *tablewriter.Table {
 	table := tablewriter.NewWriter(os.Stdout)
 
-	table.SetHeader(tableHeaders)
 	table.SetAutoWrapText(false)
 	table.SetAutoFormatHeaders(true)
 	table.SetHeaderAlignment(tablewriter.ALIGN_CENTER)
@@ -35,7 +29,9 @@ func DrawTable(cpuUsage, memUsage float64) *tablewriter.Table {
 	table.SetTablePadding("\t") // pad with tabs
 	table.SetNoWhiteSpace(true)
 
-	table.Append([]string{fmt.Sprintf("%.1f%%", cpuUsage), fmt.Sprintf("%.1f%%", memUsage)})
+	for key, val := range cpuUsage {
+		table.Append([]string{fmt.Sprintf("CPU%d %.1f%%", key, val)})
+	}
 
 	return table
 }
