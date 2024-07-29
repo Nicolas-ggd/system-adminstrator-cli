@@ -1,8 +1,11 @@
 package app
 
 import (
+	"fmt"
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/linegraph"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/fatih/color"
+	"github.com/shirou/gopsutil/mem"
 	"os"
 	"runtime"
 	"time"
@@ -14,45 +17,52 @@ var (
 )
 
 func Run() {
+	systemOs := detectOS()
+
 	arg := os.Args[1:]
 
-	if arg[0] == "-info" {
+	processing.Println("➜ system-monitor starting...")
+	switch arg[0] {
+	case "run":
+		switch systemOs {
+		case "linux":
+			startStats, err := monitor.ReadCPUTasks()
+			if err != nil {
+				invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
+				invalid.Printf("Invalid OS system, your current OS is: %s\n", systemOs)
+				os.Exit(0)
+			}
+
+			for {
+				time.Sleep(2 * time.Second)
+				endStats, err := monitor.ReadCPUTasks()
+				if err != nil {
+					invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+				}
+				v, _ := mem.VirtualMemory()
+				fmt.Println(v.Free)
+
+				cpuUsage := monitor.CalculateCPUUsage(startStats, endStats)
+
+				// clear screen
+				linegraph.ClearScreen()
+
+				// draw table
+				table := linegraph.DrawTable(cpuUsage, v.UsedPercent)
+
+				// render table
+				table.Render()
+			}
+		default:
+			os.Exit(0)
+		}
+	case "info":
 		monitor.CpuLogger()
 		os.Exit(0)
-	}
-
-	processing.Println("➜ system-monitor starting...")
-	if arg[0] != "run" {
+	default:
 		help()
 		os.Exit(0)
 	}
-
-	systemOs := detectOS()
-
-	switch systemOs {
-	case "linux":
-		startStats, err := monitor.ReadCPUTasks()
-		if err != nil {
-			invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
-			invalid.Printf("Invalid OS system, your current OS is: %s\n", systemOs)
-			os.Exit(0)
-		}
-
-		for {
-			time.Sleep(1 * time.Second)
-			endStats, err := monitor.ReadCPUTasks()
-			if err != nil {
-				invalid.Printf("Error reading CPU stats: %s\n", err.Error())
-			}
-
-			cpuUsage := monitor.CalculateCPUUsage(startStats, endStats)
-
-			processing.Printf("➜ CPU Usage: %.2f%%\n", cpuUsage)
-		}
-	default:
-		os.Exit(0)
-	}
-
 }
 
 func help() {
@@ -64,6 +74,7 @@ Usage
 
 Examples
 	$ system-monitor run 
+	$ system-monitor info 
 	`
 	_, err := c.Printf("%s %s\n", text, help)
 	if err != nil {
