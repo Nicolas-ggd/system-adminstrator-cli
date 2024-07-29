@@ -1,8 +1,10 @@
 package app
 
 import (
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/cli"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/fatih/color"
+	"log"
 	"os"
 	"runtime"
 	"time"
@@ -10,41 +12,64 @@ import (
 
 var (
 	processing = color.New(color.Bold, color.FgGreen)
+	invalid    = color.New(color.Bold, color.FgRed)
 )
 
 func Run() {
+	systemOs := detectOS()
+
 	arg := os.Args[1:]
 
-	if arg[0] == "-info" {
-		monitor.CpuLogger()
-	}
-
 	processing.Println("➜ system-monitor starting...")
-	if arg[0] != "run" && arg[0] != "-info" {
+	switch arg[0] {
+	case "run":
+		switch systemOs {
+		case "linux":
+			cpuCount := monitor.CountCPUCore()
+			startStats, err := monitor.ReadCPUTasks(cpuCount)
+			if err != nil {
+				invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
+				invalid.Printf("Invalid OS system, your current OS is: %s\n", systemOs)
+				os.Exit(0)
+			}
+
+			for {
+				time.Sleep(1 * time.Second)
+				endStats, err := monitor.ReadCPUTasks(cpuCount)
+				if err != nil {
+					invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
+				}
+
+				// clear screen
+				cli.ClearScreen()
+
+				cpuUsage, err := monitor.CalculateCPUUsage(startStats, endStats)
+				if err != nil {
+					log.Fatalln(err)
+				}
+
+				processing.Printf("system-monitoring - %v", time.Now().Format("15:04:05"))
+
+				// draw table
+				table := cli.DrawTable(cpuUsage)
+
+				// render table
+				table.Render()
+
+				// update startStats to endStats for the next interval calc
+				startStats = endStats
+			}
+		default:
+			os.Exit(0)
+		}
+	case "info":
+		monitor.CpuLogger()
+		os.Exit(0)
+	default:
 		help()
 		os.Exit(0)
 	}
-
-	systemOs := detectOS()
-
-	switch systemOs {
-	case "linux":
-		for {
-			idle0, total0 := monitor.GetLinuxCPU()
-			time.Sleep(3 * time.Second)
-			idle1, total1 := monitor.GetLinuxCPU()
-
-			idleTicks := float64(idle1 - idle0)
-			totalTicks := float64(total1 - total0)
-			cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
-
-			processing.Printf("➜  CPU usage is %f%% [busy: %f, total: %f]\n", cpuUsage, totalTicks-idleTicks, totalTicks)
-		}
-	case "darwin":
-	default:
-		os.Exit(0)
-	}
-
 }
 
 func help() {
@@ -56,6 +81,7 @@ Usage
 
 Examples
 	$ system-monitor run 
+	$ system-monitor info 
 	`
 	_, err := c.Printf("%s %s\n", text, help)
 	if err != nil {
@@ -66,21 +92,15 @@ Examples
 
 // detectOS is used to detect operating system and the target architecture of a running program.
 func detectOS() string {
-	os := runtime.GOOS
+	osSystem := runtime.GOOS
 
-	switch os {
-	case "windows":
-		processing.Println("➜ OS: Windows System")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
-	case "darwin":
-		processing.Println("➜ OS: Darwin")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
+	switch osSystem {
 	case "linux":
-		processing.Println("➜ OS: Linux")
-		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
+		processing.Printf("➜ OS: %s\n", osSystem)
+		processing.Printf("➜ Architecture: %s\n", osSystem)
 	default:
-		processing.Printf("%s.\n", os)
+		processing.Printf("%s.\n", osSystem)
 	}
 
-	return os
+	return osSystem
 }
