@@ -10,6 +10,7 @@ import (
 
 var (
 	processing = color.New(color.Bold, color.FgGreen)
+	invalid    = color.New(color.Bold, color.FgRed)
 )
 
 func Run() {
@@ -17,10 +18,11 @@ func Run() {
 
 	if arg[0] == "-info" {
 		monitor.CpuLogger()
+		os.Exit(0)
 	}
 
 	processing.Println("➜ system-monitor starting...")
-	if arg[0] != "run" && arg[0] != "-info" {
+	if arg[0] != "run" {
 		help()
 		os.Exit(0)
 	}
@@ -29,16 +31,21 @@ func Run() {
 
 	switch systemOs {
 	case "linux":
+		startStats, err := monitor.ReadCPUTasks()
+		if err != nil {
+			invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+		}
+
 		for {
-			idle0, total0 := monitor.GetLinuxCPU()
-			time.Sleep(3 * time.Second)
-			idle1, total1 := monitor.GetLinuxCPU()
+			time.Sleep(1 * time.Second)
+			endStats, err := monitor.ReadCPUTasks()
+			if err != nil {
+				invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+			}
 
-			idleTicks := float64(idle1 - idle0)
-			totalTicks := float64(total1 - total0)
-			cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
+			cpuUsage := monitor.CalculateCPUUsage(startStats, endStats)
 
-			processing.Printf("➜  CPU usage is %f%% [busy: %f, total: %f]\n", cpuUsage, totalTicks-idleTicks, totalTicks)
+			processing.Printf("➜ CPU Usage: %.2f%%\n", cpuUsage)
 		}
 	case "darwin":
 	default:
@@ -66,9 +73,9 @@ Examples
 
 // detectOS is used to detect operating system and the target architecture of a running program.
 func detectOS() string {
-	os := runtime.GOOS
+	osSystem := runtime.GOOS
 
-	switch os {
+	switch osSystem {
 	case "windows":
 		processing.Println("➜ OS: Windows System")
 		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
@@ -79,8 +86,8 @@ func detectOS() string {
 		processing.Println("➜ OS: Linux")
 		processing.Printf("➜ Architecture: %s\n", runtime.GOARCH)
 	default:
-		processing.Printf("%s.\n", os)
+		processing.Printf("%s.\n", osSystem)
 	}
 
-	return os
+	return osSystem
 }

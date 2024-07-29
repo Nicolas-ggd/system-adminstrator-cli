@@ -2,59 +2,72 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/parse"
 	"github.com/fatih/color"
-	"log"
 	"os"
-	"strconv"
 	"strings"
-
-	. "github.com/klauspost/cpuid/v2"
 )
 
 var (
 	processing = color.New(color.Bold, color.FgGreen)
 )
 
-func GetLinuxCPU() (idle, total uint64) {
-	contents, err := os.ReadFile(kernelDir)
+// CPUStats hold the CPU times from /proc/stat
+type CPUStats struct {
+	User      uint64
+	Nice      uint64
+	System    uint64
+	Idle      uint64
+	Iowait    uint64
+	Irq       uint64
+	Softirq   uint64
+	Steal     uint64
+	Guest     uint64
+	GuestNice uint64
+}
+
+// ReadCPUTasks function calculate CPU average usage percentage without idle
+func ReadCPUTasks() (CPUStats, error) {
+	val, err := os.ReadFile(kernelDir)
 	if err != nil {
-		log.Fatalf("failed to read cpu stats: %v", err)
-		return
+		return CPUStats{}, err
 	}
 
-	lines := strings.Split(string(contents), "\n")
+	lines := strings.Split(string(val), "\n")
 	for _, line := range lines {
-		fields := strings.Fields(line)
-		if fields[0] == "cpu" {
-			numFields := len(fields)
-			for i := 1; i < numFields; i++ {
-				val, err := strconv.ParseUint(fields[i], 10, 64)
-				if err != nil {
-					fmt.Println("Error: ", i, fields[i], err)
-				}
-				total += val // tally up all the numbers to get total ticks
-				if i == 4 {  // idle is the 5th field in the cpu line
-					idle = val
-				}
+		if strings.HasPrefix(line, "cpu ") {
+			fields := strings.Fields(line)
+			if len(fields) < 11 {
+				return CPUStats{}, fmt.Errorf("unexpected format in /proc/stat")
 			}
-			return
+
+			return CPUStats{
+				User:      parse.ToUint64(fields[1]),
+				Nice:      parse.ToUint64(fields[2]),
+				System:    parse.ToUint64(fields[3]),
+				Idle:      parse.ToUint64(fields[4]),
+				Iowait:    parse.ToUint64(fields[5]),
+				Irq:       parse.ToUint64(fields[6]),
+				Softirq:   parse.ToUint64(fields[7]),
+				Steal:     parse.ToUint64(fields[8]),
+				Guest:     parse.ToUint64(fields[9]),
+				GuestNice: parse.ToUint64(fields[10]),
+			}, nil
 		}
 	}
 
-	return
+	return CPUStats{}, fmt.Errorf("cpu line not found in /proc/stat")
 }
 
-func CpuLogger() {
-	processing.Println("➜ Name:", CPU.BrandName)
-	processing.Println("➜ PhysicalCores:", CPU.PhysicalCores)
-	processing.Println("➜ ThreadsPerCore:", CPU.ThreadsPerCore)
-	processing.Println("➜ LogicalCores:", CPU.LogicalCores)
-	processing.Println("➜ Family", CPU.Family, "Model:", CPU.Model, "Vendor ID:", CPU.VendorID)
-	processing.Println("➜ Features:", strings.Join(CPU.FeatureSet(), ","))
-	processing.Println("➜ CacheLine bytes:", CPU.CacheLine)
-	processing.Println("➜ L1 Data Cache:", CPU.Cache.L1D, "bytes")
-	processing.Println("➜ L1 Instruction Cache:", CPU.Cache.L1I, "bytes")
-	processing.Println("➜ L2 Cache:", CPU.Cache.L2, "bytes")
-	processing.Println("➜ L3 Cache:", CPU.Cache.L3, "bytes")
-	processing.Println("➜ Frequency", CPU.Hz, "hz")
+func CalculateCPUUsage(start, end CPUStats) float64 {
+	startTotal := start.User + start.Nice + start.System + start.Idle + start.Iowait + start.Irq + start.Softirq + start.Steal + start.Guest + start.GuestNice
+	endTotal := end.User + end.Nice + end.System + end.Idle + end.Iowait + end.Irq + end.Softirq + end.Steal + end.Guest + end.GuestNice
+
+	totalDelta := endTotal - startTotal
+	idleDelta := end.Idle - start.Idle
+
+	if totalDelta == 0 {
+		return 0.0
+	}
+	return (float64(totalDelta) - float64(idleDelta)) / float64(totalDelta) * 100.0
 }
