@@ -33,7 +33,9 @@ func Run() {
 	case "linux":
 		startStats, err := monitor.ReadCPUTasks()
 		if err != nil {
-			invalid.Printf("Error reading CPU stats: %s\n", err.Error())
+			invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
+			invalid.Printf("Invalid OS system, your current OS is: %s\n", systemOs)
+			os.Exit(0)
 		}
 
 		for {
@@ -47,7 +49,6 @@ func Run() {
 
 			processing.Printf("➜ CPU Usage: %.2f%%\n", cpuUsage)
 		}
-	case "darwin":
 	default:
 		os.Exit(0)
 	}
