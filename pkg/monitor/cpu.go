@@ -32,7 +32,7 @@ func ReadCPUTasks(cpuCount int) ([]CPUStats, error) {
 	var stats []CPUStats
 	var cpuStat CPUStats
 
-	val, err := os.ReadFile(kernelDir)
+	val, err := os.ReadFile(kernelActivity)
 	if err != nil {
 		return nil, err
 	}
