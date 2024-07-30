@@ -10,6 +10,7 @@ var (
 	// dir for kernel activity
 	kernelActivity = "/proc/stat"
 	kernelMem      = "/proc/meminfo"
+	kernelNet      = "/proc/net/dev"
 )
 
 func CpuLogger() {

@@ -34,6 +34,8 @@ func Run() {
 				os.Exit(0)
 			}
 
+			startNetStat, _ := monitor.ReadNetDev()
+
 			for {
 				time.Sleep(1 * time.Second)
 				endStats, err := monitor.ReadCPUTasks(cpuCount)
@@ -42,8 +44,22 @@ func Run() {
 					continue // skip this iteration and retry in the next loop
 				}
 
+				endNetStat, err := monitor.ReadNetDev()
+				if err != nil {
+					invalid.Printf("Error reading net stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
+				}
+
 				// clear screen
 				cli.ClearScreen()
+
+				netStat, err := monitor.ReadNetUsage(startNetStat, endNetStat)
+				if err != nil {
+					invalid.Printf("Error reading Memory and Swap stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
+				}
+
+				fmt.Printf("%+v\n", netStat)
 
 				memResp, err := monitor.ReadMemUsage()
 				if err != nil {
