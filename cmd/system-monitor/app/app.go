@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/cli"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/fatih/color"
@@ -44,13 +45,19 @@ func Run() {
 				// clear screen
 				cli.ClearScreen()
 
+				memResp, err := monitor.ReadMemUsage()
+				if err != nil {
+					invalid.Printf("Error reading Memory and Swap stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
+				}
+
 				cpuUsage, err := monitor.CalculateCPUUsage(startStats, endStats)
 				if err != nil {
 					log.Fatalln(err)
 				}
 
 				processing.Printf("system-monitoring - %v", time.Now().Format("15:04:05"))
-
+				fmt.Printf("%+v\n", memResp)
 				// draw table
 				table := cli.DrawTable(cpuUsage)
 

@@ -8,7 +8,8 @@ import (
 
 var (
 	// dir for kernel activity
-	kernelDir = "/proc/stat"
+	kernelActivity = "/proc/stat"
+	kernelMem      = "/proc/meminfo"
 )
 
 func CpuLogger() {
