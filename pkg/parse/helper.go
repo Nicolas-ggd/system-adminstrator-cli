@@ -27,6 +27,10 @@ func ToUint64(s string) uint64 {
 	return v
 }
 
+func BytesToKB(bytes int64) float64 {
+	return float64(bytes) / 1024
+}
+
 func KbToGB(kb int64) float64 {
 	return float64(kb) * float64(KIB) / (float64(KILO) * float64(KILO) * float64(KILO))
 }
