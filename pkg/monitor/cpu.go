@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/parse"
 	"github.com/fatih/color"
-	pCPU "github.com/shirou/gopsutil/cpu"
-	"log"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -98,10 +97,5 @@ func CalculateCPUUsage(start, end []CPUStats) ([]float64, error) {
 
 // CountCPUCore function return number physical and logical cores count
 func CountCPUCore() int {
-	cpuCount, err := pCPU.Counts(true)
-	if err != nil {
-		log.Fatalf("Failed to count CPU %v", err.Error())
-	}
-
-	return cpuCount
+	return runtime.NumCPU()
 }
