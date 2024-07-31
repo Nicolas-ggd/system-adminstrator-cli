@@ -8,7 +8,7 @@ that helps with monitoring, managing, and troubleshooting systems.
 Building a System Administrator Tool is an excellent way to apply Go skills to real-world problems. This project is a testing application to explore new possibilities and gain more knowledge in Go. Let's see what happens in the future!
 
 ## 🔨 Features to Consider:
-1. System Monitoring: Monitor CPU usage, memory consumption, disk space, and network traffic.
+1. System Monitoring: Monitor CPU usage, memory consumption and network traffic.
 2. Alerting and Notifications: Send alerts when thresholds are exceeded (e.g., or running scripts. CPU usage > 80% or when specific events occur (e.g., a service crashes)).
 
 ## 🧰 Tools and Libraries:
