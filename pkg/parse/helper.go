@@ -27,6 +27,24 @@ func ToUint64(s string) uint64 {
 	return v
 }
 
+func ToInt(s string) int {
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+
+	return v
+}
+
+func ToFloat64(s string) float64 {
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+
+	return v
+}
+
 func BytesToKB(bytes int64) float64 {
 	return float64(bytes) / 1024
 }
