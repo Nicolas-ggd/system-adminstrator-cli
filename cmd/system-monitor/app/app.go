@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	processing = color.New(color.Bold, color.FgGreen)
+	processing = color.New(color.FgGreen)
 	invalid    = color.New(color.Bold, color.FgRed)
 )
 
@@ -26,7 +26,10 @@ func Run() {
 	case "run":
 		switch systemOs {
 		case "linux":
+			// count cpu core with logical cores
 			cpuCount := monitor.CountCPUCore()
+
+			// read cpu tasks
 			startStats, err := monitor.ReadCPUTasks(cpuCount)
 			if err != nil {
 				invalid.Printf("Error reading CPU stats, failed to %s\n", err.Error())
@@ -34,16 +37,21 @@ func Run() {
 				os.Exit(0)
 			}
 
+			// read network stats
 			startNetStat, _ := monitor.ReadNetDev()
 
 			for {
+				// wait 1 second for delay
 				time.Sleep(1 * time.Second)
+
+				// read cpu tasks again after 1-second delay
 				endStats, err := monitor.ReadCPUTasks(cpuCount)
 				if err != nil {
 					invalid.Printf("Error reading CPU stats: %s\n", err.Error())
 					continue // skip this iteration and retry in the next loop
 				}
 
+				// read networks tasks again after 1-second delay
 				endNetStat, err := monitor.ReadNetDev()
 				if err != nil {
 					invalid.Printf("Error reading net stats: %s\n", err.Error())
@@ -53,20 +61,23 @@ func Run() {
 				// clear screen
 				cli.ClearScreen()
 
+				// receive calculated network usage
 				netStat, err := monitor.ReadNetUsage(startNetStat, endNetStat)
 				if err != nil {
-					invalid.Printf("Error reading Memory and Swap stats: %s\n", err.Error())
+					invalid.Printf("Error reading Network stats: %s\n", err.Error())
 					continue // skip this iteration and retry in the next loop
 				}
 
 				fmt.Printf("%+v\n", netStat)
 
+				// read memory usage
 				memResp, err := monitor.ReadMemUsage()
 				if err != nil {
 					invalid.Printf("Error reading Memory and Swap stats: %s\n", err.Error())
 					continue // skip this iteration and retry in the next loop
 				}
 
+				// calculate cpu usage
 				cpuUsage, err := monitor.CalculateCPUUsage(startStats, endStats)
 				if err != nil {
 					log.Fatalln(err)
