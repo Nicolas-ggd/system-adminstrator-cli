@@ -60,7 +60,12 @@ func Run() {
 
 				// clear screen
 				cli.ClearScreen()
-
+				proc, err := monitor.GetProc()
+				if err != nil {
+					invalid.Printf("Error reading process stats: %s\n", err.Error())
+					continue // skip this iteration and retry in the next loop
+				}
+				fmt.Printf("%+v\n", proc)
 				// receive calculated network usage
 				netStat, err := monitor.ReadNetUsage(startNetStat, endNetStat)
 				if err != nil {
