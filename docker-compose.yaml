@@ -1,0 +1,46 @@
+version: "4.9"
+networks:
+  fullstack:
+    driver: bridge
+
+services:
+  ollama:
+    restart: unless-stopped
+    tty: true
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+  ollama-webui:
+    build:
+      context: .
+      args:
+        OLLAMA_API_BASE_URL: '/ollama/api'
+      dockerfile: Dockerfile
+    image: ollama-webui:latest
+    container_name: ollama-webui
+    depends_on:
+      - ollama
+    ports:
+      - 3000:8080
+    environment:
+      - "OLLAMA_API_BASE_URL=http://ollama:11434/api"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+
+  app:
+    networks:
+      - fullstack
+    container_name: system-monitor
+    image: system-monitor:latest
+    restart: unless-stopped
+    ports:
+      - '8741:8741'
+    volumes:
+      - api:/usr/src/app/
+volumes:
+  api:
+  ollama:
