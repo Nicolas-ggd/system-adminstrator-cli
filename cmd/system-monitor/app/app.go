@@ -20,8 +20,13 @@ func Run() {
 	systemOs := detectOS()
 
 	arg := os.Args[1:]
-
 	processing.Println("➜ system-monitor starting...")
+
+	if len(arg) == 0 {
+		invalid.Println("No arguments provided.")
+		os.Exit(0)
+	}
+
 	switch arg[0] {
 	case "run":
 		switch systemOs {

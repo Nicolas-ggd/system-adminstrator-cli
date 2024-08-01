@@ -8,9 +8,9 @@ WORKDIR /app
 COPY . ./
 
 
-# Compile the application to a binary called 'main'.
+# Compile the application to a binary called 'system-monitor'.
 # CGO_ENABLED=0 disables CGO for static building. GOOS=linux ensures compatibility.
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/system-monitor/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o system-monitor ./cmd/system-monitor/main.go
 
 # Start a new stage from alpine:3.19 for a smaller, final image
 FROM alpine:3.19
@@ -27,4 +27,4 @@ COPY --from=builder /app .
 EXPOSE 8080
 
 # Command to run the compiled binary
-CMD ["./main"]
+CMD ["./system-monitor"]
