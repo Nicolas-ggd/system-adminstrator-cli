@@ -36,7 +36,7 @@ services:
       - fullstack
     container_name: system-monitor
     build: .
-    command: ["./system-monitor"]
+    command: ["./system-monitor", "run"]
     image: system-monitor:latest
     restart: unless-stopped
     ports:
