@@ -7,13 +7,13 @@ services:
   ollama:
     restart: unless-stopped
     tty: true
-    image: ollama/ollama:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama:/root/.ollama
-      - ./entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
-    entrypoint: [ "/usr/local/bin/entrypoint.sh" ]
 
   ollama-webui:
     build:
