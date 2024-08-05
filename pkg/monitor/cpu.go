@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Nicolas-ggd, released under Apache-2.0 License. See LICENSE file.
+
 package monitor
 
 import (

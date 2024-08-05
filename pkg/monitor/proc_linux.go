@@ -1,7 +1,8 @@
+// Copyright (c) 2024 Nicolas-ggd, released under Apache-2.0 License. See LICENSE file.
+
 package monitor
 
 import (
-	"fmt"
 	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/parse"
 	"log"
 	"os/exec"
@@ -25,8 +26,6 @@ func GetProc() ([]ProcMonitor, error) {
 
 	procSettings := strings.Split(strings.TrimSuffix(string(val), "\n"), "\n")[1:]
 	for _, line := range procSettings {
-		fmt.Printf("%+v\n", line)
-
 		p := ProcMonitor{
 			// Characters 0 to 10 (PID)
 			PID: parse.ToInt(strings.TrimSpace(line[0:10])),

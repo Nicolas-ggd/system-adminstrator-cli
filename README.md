@@ -18,4 +18,4 @@ Building a System Administrator Tool is an excellent way to apply Go skills to r
 Contributions are welcome! If anyone have interest to work with this project, hit a fork button....
 
 ## 📄 LICENSE
-This project is licensed under the MIT License.
+This project is licensed under the Apache-2.0 License.

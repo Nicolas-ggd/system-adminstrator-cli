@@ -1,3 +1,5 @@
+// Copyright (c) 2024 Nicolas-ggd, released under Apache-2.0 License. See LICENSE file.
+
 package app
 
 import (
@@ -110,8 +112,10 @@ func Run() {
 	case "info":
 		monitor.CpuLogger()
 		os.Exit(0)
-	default:
+	case "help":
 		help()
+	default:
+		invalid.Println("➜ Please provide a command to access system administrators or run command `help`")
 		os.Exit(0)
 	}
 }
