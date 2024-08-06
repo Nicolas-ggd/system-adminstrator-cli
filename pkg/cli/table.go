@@ -4,6 +4,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/Nicolas-ggd/system-adminstrator-cli/pkg/monitor"
 	"github.com/olekukonko/tablewriter"
 	"os"
 	"os/exec"
@@ -17,7 +18,7 @@ func ClearScreen() {
 }
 
 // DrawTable draw table using external library
-func DrawTable(cpuUsage []float64) *tablewriter.Table {
+func DrawTable(cpuUsage []float64, mem *monitor.MemStatResponse) *tablewriter.Table {
 	table := tablewriter.NewWriter(os.Stdout)
 
 	table.SetAutoWrapText(false)
@@ -31,9 +32,20 @@ func DrawTable(cpuUsage []float64) *tablewriter.Table {
 	table.SetTablePadding("\t") // pad with tabs
 	table.SetNoWhiteSpace(true)
 
+	cpuHeader := "%Cpu(s):"
+	cpuValues := ""
 	for key, val := range cpuUsage {
-		table.Append([]string{fmt.Sprintf("CPU%d %.1f%%", key, val)})
+		cpuValues += fmt.Sprintf("CPU%d %.1f%%, ", key, val)
 	}
+
+	// Remove the trailing comma and space
+	if len(cpuValues) > 0 {
+		cpuValues = cpuValues[:len(cpuValues)-2]
+	}
+
+	table.Append([]string{fmt.Sprintf("%s %s", cpuHeader, cpuValues)})
+	table.Append([]string{fmt.Sprintf("Mib Mem: %.1f MemTotal, %.1f MemFree, %.1f MemUsed", mem.MemoryTotal, mem.MemFree, mem.MemoryUsed)})
+	table.Append([]string{fmt.Sprintf("Mib Swap: %.1f SwapTotal, %.1f SwapFree, %.1f SwapUsed", mem.SwapTotal, mem.SwapFree, mem.SwapUsed)})
 
 	return table
 }

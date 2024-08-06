@@ -54,3 +54,7 @@ func BytesToKB(bytes int64) float64 {
 func KbToGB(kb int64) float64 {
 	return float64(kb) * float64(KIB) / (float64(KILO) * float64(KILO) * float64(KILO))
 }
+
+func KBToMib(kb int64) float64 {
+	return float64(kb) / 1024
+}

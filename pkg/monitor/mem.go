@@ -23,9 +23,11 @@ type MemStatResponse struct {
 	MemoryTotal      float64
 	MemoryUsed       float64
 	MemoryPercentage float64
+	MemFree          float64
 	SwapTotal        float64
 	SwapUsed         float64
 	SwapPercentage   float64
+	SwapFree         float64
 }
 
 func ReadMemUsage() (*MemStatResponse, error) {
@@ -47,7 +49,12 @@ func ReadMemUsage() (*MemStatResponse, error) {
 			mem.Buffers = parse.ToInt64(fields[1])
 		} else if len(fields) > 1 && fields[0] == "Cached:" {
 			mem.Cached = parse.ToInt64(fields[1])
+		} else if len(fields) > 1 && fields[0] == "MemFree:" {
+			mem.MemFree = parse.ToInt64(fields[1])
+		} else if len(fields) > 1 && fields[0] == "SwapFree:" {
+			mem.SwapFree = parse.ToInt64(fields[1])
 		}
+
 	}
 
 	usedMem := mem.MemTotal - mem.MemFree - mem.Buffers - mem.Cached
@@ -57,12 +64,14 @@ func ReadMemUsage() (*MemStatResponse, error) {
 	percentageSwap := float64(usedSwap) / float64(mem.SwapTotal) * 100
 
 	memResp := &MemStatResponse{
-		MemoryTotal:      parse.KbToGB(mem.MemTotal),
-		MemoryUsed:       parse.KbToGB(usedMem),
+		MemoryTotal:      parse.KBToMib(mem.MemTotal),
+		MemoryUsed:       parse.KBToMib(usedMem),
 		MemoryPercentage: percentageMem,
-		SwapTotal:        parse.KbToGB(mem.SwapTotal),
-		SwapUsed:         parse.KbToGB(usedSwap),
+		MemFree:          parse.KBToMib(mem.MemFree),
+		SwapTotal:        parse.KBToMib(mem.SwapTotal),
+		SwapUsed:         parse.KBToMib(usedSwap),
 		SwapPercentage:   percentageSwap,
+		SwapFree:         parse.KBToMib(mem.SwapFree),
 	}
 
 	return memResp, nil
