@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -107,39 +108,26 @@ func Run() {
 		os.Exit(0)
 	case "help":
 		help()
-	case "-proc":
+	case "proc":
 		switch systemOs {
 		case "linux":
-			headers := []string{"PID", "Command", "CPU(%)", "MEM(%)", "Full Command"}
-			var result [][]string
-			for {
-				// wait 1 second for delay
-				time.Sleep(1 * time.Second)
+			// wait 1 second for delay
+			time.Sleep(1 * time.Second)
 
-				// clear the terminal screen
-				cli.ClearScreen()
+			// clear the terminal screen
+			cli.ClearScreen()
 
-				proc, err := monitor.GetProc()
-				if err != nil {
-					log.Fatalf("Error fetching process info: %v", err)
-				}
+			processes, err := monitor.GetProc()
+			if err != nil {
+				log.Fatalf("Error fetching process info: %v", err)
+			}
 
-				for _, val := range proc {
-					row := []string{
-						fmt.Sprintf("%d", val.PID),
-						fmt.Sprintf("%.2f", val.CPU),
-						fmt.Sprintf("%.2f", val.Mem),
-						val.Command,
-						val.FullCommand,
-					}
+			fmt.Printf("%-5s %-25s %-60s %-8s %-8s\n", "PID", "COMMAND", "ARGS", "CPU%", "MEM%")
+			fmt.Println(strings.Repeat("-", 110))
 
-					result = append(result, row)
-				}
-
-				table := cli.DrawTableTop(headers, result)
-
-				// render table
-				table.Render()
+			// iterate through processes and print each one
+			for _, proc := range processes {
+				fmt.Printf("%-5d %-25s %-60s %-8.1f %-8.1f\n", proc.PID, proc.Command, proc.FullCommand, proc.CPU, proc.Mem)
 			}
 		}
 	default:
@@ -157,6 +145,7 @@ Usage
 
 Examples
 	$ system-monitor run 
+	$ system-monitor proc 
 	$ system-monitor info 
 	`
 	_, err := c.Printf("%s %s\n", text, help)
