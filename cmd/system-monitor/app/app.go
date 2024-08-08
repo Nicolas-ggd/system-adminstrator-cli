@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -64,15 +65,9 @@ func Run() {
 					invalid.Printf("Error reading net stats: %s\n", err.Error())
 					continue // skip this iteration and retry in the next loop
 				}
-
 				// clear screen
 				cli.ClearScreen()
-				proc, err := monitor.GetProc()
-				if err != nil {
-					invalid.Printf("Error reading process stats: %s\n", err.Error())
-					continue // skip this iteration and retry in the next loop
-				}
-				fmt.Printf("%+v\n", proc)
+
 				// receive calculated network usage
 				netStat, err := monitor.ReadNetUsage(startNetStat, endNetStat)
 				if err != nil {
@@ -96,9 +91,8 @@ func Run() {
 				}
 
 				processing.Printf("system-monitoring - %v", time.Now().Format("15:04:05"))
-				fmt.Printf("%+v\n", memResp)
 				// draw table
-				table := cli.DrawTable(cpuUsage)
+				table := cli.DrawTable(cpuUsage, memResp)
 
 				// render table
 				table.Render()
@@ -114,6 +108,28 @@ func Run() {
 		os.Exit(0)
 	case "help":
 		help()
+	case "proc":
+		switch systemOs {
+		case "linux":
+			// wait 1 second for delay
+			time.Sleep(1 * time.Second)
+
+			// clear the terminal screen
+			cli.ClearScreen()
+
+			processes, err := monitor.GetProc()
+			if err != nil {
+				log.Fatalf("Error fetching process info: %v", err)
+			}
+
+			fmt.Printf("%-5s %-25s %-60s %-8s %-8s\n", "PID", "COMMAND", "ARGS", "CPU%", "MEM%")
+			fmt.Println(strings.Repeat("-", 110))
+
+			// iterate through processes and print each one
+			for _, proc := range processes {
+				fmt.Printf("%-5d %-25s %-60s %-8.1f %-8.1f\n", proc.PID, proc.Command, proc.FullCommand, proc.CPU, proc.Mem)
+			}
+		}
 	default:
 		invalid.Println("➜ Please provide a command to access system administrators or run command `help`")
 		os.Exit(0)
@@ -129,6 +145,7 @@ Usage
 
 Examples
 	$ system-monitor run 
+	$ system-monitor proc 
 	$ system-monitor info 
 	`
 	_, err := c.Printf("%s %s\n", text, help)
